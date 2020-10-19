@@ -1,0 +1,78 @@
+---
+- hosts: gpu_node
+  become: yes
+
+  tasks:  
+  - name: install kernel headers
+    yum:
+      name: http://repo.iotti.biz/CentOS/7/x86_64/kernel-devel-3.10.0-1062.12.1.el7.centos.plus.x86_64.rpm
+      state: present
+      update_cache: true
+
+  - name: install kernel headers
+    yum:
+      name: http://repo.iotti.biz/CentOS/7/x86_64/kernel-headers-3.10.0-1062.12.1.el7.centos.plus.x86_64.rpm
+      state: present
+      update_cache: true    
+
+  # Epel should already be installed in the base image
+  #- name: run the update
+  #  shell: yum -y update
+
+  - name: Install the 'Development tools' package group
+    yum:
+      name: "@Development tools"
+      state: present
+
+  - name: Add in the repo
+    yum:
+      name: http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda-repo-rhel7-10-2-local-10.2.89-440.33.01-1.0-1.x86_64.rpm
+      state: present
+
+  - name: clean yum
+    shell: yum clean all
+
+  - name: install the driver
+    yum:
+      name: nvidia-driver-latest-dkms #-3:455.23.05-1.el7
+      state: present
+
+  - name: install the cuda that I need
+    yum:
+      name: cuda
+      state: present
+
+  - name: install cuda-drivers
+    yum:
+      name: cuda-drivers
+      state: present
+
+  - name: update everything
+    shell: yum -y update
+
+  - name: Add patch
+    yum:
+      name: http://developer.download.nvidia.com/compute/cuda/10.2/Prod/patches/1/cuda-repo-rhel7-10-2-local-10.2.1-1.x86_64.rpm
+      state: present
+
+  - name: create rapids directory
+    file:
+      path: /opt/rapids
+      state: directory
+
+  - name: Load Nvidia jars
+    get_url:
+      url: "https://repo1.maven.org/maven2/{{ item }}"
+      dest: /opt/rapids/
+      mode: '0777'
+    loop:
+    - ai/rapids/cudf/0.15/cudf-0.15-cuda10-2.jar
+    - com/nvidia/rapids-4-spark_2.12/0.2.0/rapids-4-spark_2.12-0.2.0.jar
+
+  - name: Load the find gpu script
+    copy:
+      src: files/getGpusResources.sh
+      dest: /opt/rapids/getGpusResources.sh
+      mode: '0777'
+      
+    

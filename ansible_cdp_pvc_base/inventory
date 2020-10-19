@@ -1,0 +1,5 @@
+# Example Inventory
+# AWS example
+
+[gpu_node]
+ip-10-0-1-xxx.ap-southeast-2.compute.internal ansible_host=<aws_external_ip>> # i-006d9058555ec550f
