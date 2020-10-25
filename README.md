@@ -41,6 +41,20 @@ run `nvidia-smi` it should list out the GPUs on your system. If nothing shows up
 
 run `dmesg | grep nvidia` to see if nvidia drivers are being started on boot. 
 
+## Enabling GPU in Yarn
+
+- Enable Yarn GPU tickbox under services Yarn
+- Enable Cgroup scheduling under ?Yarn?
+- Enable Cgroups under host settings
+  - Need to examine this a bit more and understand how we tune cgroups at least superficially
+
+## Yarn Role Groups
+
+
+- need to look at role groups: https://docs.cloudera.com/documentation/enterprise/5-6-x/topics/cm_mc_role_groups.html
+  - Otherwise all nodes need to have gpu cause there will be findgpu script issues otherwise
+
+- or can use compute clusters with a separate gpu compute group
 
 ## Example launching spark-shell
 
@@ -72,3 +86,13 @@ spark3-shell \
 
 ```
 
+## Some GPU considerations in no particular order
+
+- Which are GPU ops and which arent
+- rapids memory pinning model and association with Spark Executors
+
+## Future to look at
+
+- TonY?
+- XGB on Spark 3 on Yarn with rapids
+- SKLearn on Spark 3 on Yarn with rapids
