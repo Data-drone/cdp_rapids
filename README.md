@@ -43,10 +43,22 @@ run `dmesg | grep nvidia` to see if nvidia drivers are being started on boot.
 
 ## Enabling GPU in Yarn
 
-- Enable Yarn GPU tickbox under services Yarn
-- Enable Cgroup scheduling under ?Yarn?
-- Enable Cgroups under host settings
-  - Need to examine this a bit more and understand how we tune cgroups at least superficially
+There are a few steps that need to be taken in order to enable GPUs on Yarn. These differ from the default instructions from Apache Docs as Cloudera Manager helps to automate some of these steps and automatically changes some of the configuration flags automatically. 
+
+First lets talk cgroups. Cgroups are linux controls to limit what resources hardware resources different applications have access to. This includes cpu, ram, gpu etc and is the only way to truly guarantee the amount of resources allocated to a running application. Other resource allocation methods will make a best effort to ensure that applications do not use too many resources but cannot guarantee this.
+
+In order to make sure that we can properly allocate GPUs to Yarn containers we need to turn this on.
+
+In Cloudera Manager, this is a host based setting that can be set From the **Hosts** >> **Hosts Configuration** option in the left side toolbar. Search for cgroups to find the tickbox. Ticking the tickbox will enable it for all nodes but it can also be set on a host by host basis through the **Add Host Overrides** option. For more details on the finer details of cgroup management please see: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/managing-clusters/topics/cm-linux-cgroups.html
+
+#### TODO Things to check:
+- we can just turn on for the yarn nodes yeah?
+- maybe even just the ones with gpu?
+
+With cgroups enabled, it we now need to turn on Cgroup scheduling under the Yarn service. Go to the Yarn service Cloudera Manager. Go to `Resource Management` then search for cgroup. Tick the setting `Use CGroups for Resource Management`  
+
+Now we can enable GPU on Yarn.  
+
 
 ## Yarn Role Groups
 
