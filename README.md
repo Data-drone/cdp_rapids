@@ -5,7 +5,7 @@ Before starting make sure that you have access to the following requirements fir
 
 ## Requirements
 
-- Ansible
+- Ansible if using setup script
 - Cloudera CDP Private Cloud Base 7.1+
 - Cloudera CDS 3.x
 - Centos 7
@@ -56,11 +56,19 @@ Now we can enable GPU on Yarn through the `Enable GPU Usage` tickbox
 
 ## Yarn Role Groups
 
+By default, `Enable GPU Usage` would enable it for the whole cluster. That means that all the Yarn nodes would have to have GPUs for a large sized cluster that could be very expensive. There are two options that we can take. We can either add a small compute cluster with the GPU nodes on the side but then users would have to connect to two different clusters depending on if they want to use GPUs or not. The other option is to create **Role Groups** in order to separately configure the GPU and non GPU nodes but keep them in the same cluster.
 
-- need to look at role groups: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/configuring-clusters/topics/cm-role-groups.html
-  - Otherwise all nodes need to have gpu cause there will be findgpu script issues otherwise
+First lets have a look at Role Groups. Role groups are configured on the service level. So go to **Yarn** >> **Instances** the Role Groups button is just above the table with the list of hosts. Click **Create a role group**. In my case, I entered the Group Name **GPU Nodes** of the Role Type NodeManager and I set the Copy From field to the **NodeManager Default Group**  
 
-- or can use compute clusters with a separate gpu compute group
+Now assign the GPU hosts to the **GPU Nodes** We can now click `Enable GPU Usage` just for the GPU Nodes. For more details on role groups, see: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/configuring-clusters/topics/cm-role-groups.html. 
+
+Another option is to have a dedicated GPU subcluster. To see how to do this, follow the instructions here: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/managing-clusters/topics/cm-add-compute-cluster.html then once your compute cluster is up and running you can follow the previous steps to enable CGroups and turn on `Enable GPU Usage`.
+
+## Adding Rapids Libraries
+
+In order to be able to leverage Nvidia RAPIDS, yarn and the spark executors have to be able to access the spark RAPIDS libraries.
+The required jars are here: https://nvidia.github.io/spark-rapids/docs/get-started/getting-started-on-prem.html
+In my sample code, I have created a /opt/rapids folder on all the yarn nodes  
 
 ## Example launching spark-shell
 
