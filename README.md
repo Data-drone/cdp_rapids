@@ -100,12 +100,22 @@ spark3-shell \
 
 ```
 
-## Some GPU considerations in no particular order
+Breaking down the Spark Submit command:
 
-- Which are GPU ops and which arent
-- rapids memory pinning model and association with Spark Executors
+- The GPU on G4 instance I had has 16GB VRAM so I upped executor memory to match so that there is some buffering capability in the executor. Since GPUs are typically RAM constrained it is important to try and minimise the amount of time that you are bottlenecking waiting for data. There is no science around how much to up the executor memory. It just depends on your application and how IO you have going to and from the GPU. Also non GPU friendly ops will be completed by the executor on CPU. Same with executor cores, I upped it to a recommended level for pulling and pushing data from HDFS.
+- `spark.rapids.sql.explain=ALL` helps to highlight which parts of a spark operation can and can't be done on GPU. Example of operations which aren't current currently be done on GPU include: Regex splitting of strings, Datetime logic, some statistical operations. Overall the non supported operations that you have better the performance
+- `spark.rapids.shims-provider-override=com.nvidia.spark.rapids.shims.spark301.SparkShimServiceProvider` - The reality of today is that not all Spark is equal. Each commercial distribution can be slightly different as such the `shims` layer provides a kind of mapping to make sure that rapids performs seamlessly. Currently, RAPIDs doesn't have a cloudera shim out of the box but Cloudera's distribution of Spark 3 closely mirrors the open source. So we need explicitly specify this mapping of Opensource to the Cloudera CDS parcel for now.
+-  `spark.rapids.memory.pinnedPool.size` - in order to optimise for GPU performance, Rapids allows for "pinning" memory specific to assist in transfering data to the GPU. GPU that is "pinned" for this purpose won't be available for other operations.
 
-## Future to look at
+The other flags are pretty self explanatory. It is worth noting that spark rapids sql needs to be explicitly enabled. See the official RAPIDs tuning guide for more details: https://nvidia.github.io/spark-rapids/docs/tuning-guide.html
+
+## Some thoughts
+
+Spark RAPIDs is a very promising technology that can help to greatly accelerate big data operations. Good Data Analysis like other intellectual tasks requires getting into the "flow", getting "into the zone". Interruptions can be very disruptive to this. Due to the volumes of data involved these days, even simple queries and operations can take minutes to run which interrupts "flow". RAPIDs is a good acceleration package in other to help reduce this.
+
+It does, still currently have quite a few limitations however, there is no native support for datetime and some more complicated statistical operations. GPUs outside of extremely high end models are typically highly RAM bound. The data input format support is also not as extensive as with Spark on it's own. There is a lot of promise however and it will be good to see where this technology goes. 
+
+## Future Topics to look at
 
 - TonY?
 - XGB on Spark 3 on Yarn with rapids
