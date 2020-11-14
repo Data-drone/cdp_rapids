@@ -43,9 +43,11 @@ Before proceeding to enable gpu on yarn check that your Nvidia Drivers are insta
 
 run `nvidia-smi` it should list out the GPUs on your system. If nothing shows up then your drivers weren't properly installed. If this is showing nothing or erroring out, there are a few things to check.
 
+![Nvidia-smi screen](img/nvidia-smi.png?raw=true)
+
 run `dmesg | grep nvidia` to see if nvidia drivers are being started on boot. 
 
-<TODO Example Nvidia SMI screen>
+![dmseg screen](img/dmsg_nvidia.png?raw=true)
 
 ## Setting up RAPIDs on Spark on CDP
 
@@ -61,15 +63,21 @@ To be able to schedule GPUs, we need gpu isolation and for that we need to lever
 
 In Cloudera Manager, enabling cgroups is a host based setting that can be set From the **Hosts** >> **Hosts Configuration** option in the left side toolbar. Search for cgroups to find the tickbox. 
 
-<TODO CGroups tickbox screen>
+![enable cgroups](img/cm_cgroups.png?raw=true)
 
 Ticking the big tickbox will enable it for all nodes but it can also be set on a host by host basis through the **Add Host Overrides** option. For more details on the finer details of the cgroup settings please see: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/managing-clusters/topics/cm-linux-cgroups.html
 
+![cgroups hostgroups](img/host_groups_override.png?raw=true)
+
 With cgroups enabled, we now need to turn on **Cgroup Scheduling** under the Yarn service. Go to the Yarn service Cloudera Manager. Go to `Resource Management` then search for cgroup. Tick the setting `Use CGroups for Resource Management`  
 
-Now we can enable GPU on Yarn through the `Enable GPU Usage` tickbox. Before you do that, however, it is worth noting that it will by default enable GPUs on **ALL** the nodes which means all your Yarn Node Managers will have to have GPUs. If only some of your nodes have GPUs, read on!
+![yarn cgroups](img/yarn_use_cgroups.png?raw=true)
 
-<TODO Yarn Enable GPU Usage Tickbox>
+Now we can enable GPU on Yarn through the `Enable GPU Usage` tickbox. You can find that under Yarn >> Configuration then the GPU Management category. 
+
+![yarn gpu](img/yarn_gpu_usage.png?raw=true)
+
+Before you do that, however, it is worth noting that it will by default enable GPUs on **ALL** the nodes which means all your Yarn Node Managers will have to have GPUs. If only some of your nodes have GPUs, read on!
 
 ## Yarn Role Groups
 
