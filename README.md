@@ -73,6 +73,10 @@ With cgroups enabled, we now need to turn on **Cgroup Scheduling** under the Yar
 
 ![yarn cgroups](img/yarn_use_cgroups.png?raw=true)
 
+We will also need to turn on `Always Use Linux Container Executor` 
+
+![yarn cgroups](img/linux_container_executor.png?raw=true)
+
 Now we can enable GPU on Yarn through the `Enable GPU Usage` tickbox. You can find that under Yarn >> Configuration then the GPU Management category. 
 
 ![yarn gpu](img/yarn_gpu_usage.png?raw=true)
@@ -91,14 +95,21 @@ The other option, to stick with one cluster whilst adding a GPU or two is to cre
 
 **Role groups** are configured on the service level. To setup a GPU role group for Yarn, in Cloudera Manager navigate to **Yarn** >> **Instances**. You will see the Role Groups button just above the table listing all the hosts.
 
-<TODO add in screenshot for hostgroups>
+![yarn role groups](img/yarn_role_groups.png?raw=true)
 
 Click **Create a role group**. In my case, I entered the Group Name **GPU Nodes** of the Role Type NodeManager and I set the `Copy From field` to **NodeManager Default Group**  
 
-With our role group created, it is time to assign the GPU hosts to the **GPU Nodes** group. With our role group created, We will be able to `Enable GPU Usage` just for the GPU Nodes. For more details on role groups, see: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/configuring-clusters/topics/cm-role-groups.html. 
+![yarn create groups](img/yarn_create_role_groups.png?raw=true)
 
-<TODO screen shot for role groups>
 
+With our role group created, it is time to assign the GPU hosts to the **GPU Nodes** group. Select the nodes in the NodeManager Default Group that have GPUs and move them to the new GPU Node group.
+
+![yarn assign groups](img/yarn_reassign_role_group.png?raw=true)
+
+
+With our role group created, We will be able to `Enable GPU Usage` just for the GPU Nodes. For more details on role groups, see: https://docs.cloudera.com/cdp-private-cloud-base/7.1.4/configuring-clusters/topics/cm-role-groups.html. Note you may need to restart the cluster first. 
+
+![yarn gpu role groups](img/gpu_role_group.png?raw=true)
 
 ## Adding Rapids Libraries
 
@@ -106,14 +117,24 @@ In order to be able to leverage Nvidia RAPIDS, yarn and the spark executors have
 The required jars are here: https://nvidia.github.io/spark-rapids/docs/get-started/getting-started-on-prem.html
 In my sample code, I have created a /opt/rapids folder on all the yarn nodes. Spark also requires a discover GPU resources script too. See: https://spark.apache.org/docs/3.0.1/running-on-yarn.html#resource-allocation-and-configuration-overview I have also included the `getGpusResources.sh` script under `ansible_cdp_pvc_base/files/getGpusResources.sh` in this repo
 
+## Verifying Yarn GPU
+
+Now that we have everything set up, we should be able to see yarn.io/gpu listed as one of the Usage meters on the Yarn2 cluster overview screen. If you don't see this dial then it means that something in the previous config has gone wrong.
+
+![yarn io screen](img/gpu_yarn_meter.png?raw=true)
+
+
 ## Launching spark-shell
 
 We now finally have everything configured, now we can launch gpu enabled Spark-Shell.
 Run the following on an edge node. Note that the commands below assume that
 `/opt/rapids/cudf-0.15-cuda10-2.jar`, `/opt/rapids/rapids-4-spark_2.12-0.2.0.jar` and `/opt/rapids/getGpusResources.sh` exist. You will need them on each GPU node as well. Also you will need different `.jar` files depending on the CUDA version that you have installed. See the official spark-rapids docs to get the jars: `https://nvidia.github.io/spark-rapids/`
 
-On a kerberised cluster, you will need to `kinit` as a valid kerberos user first for the following to work.
+On a kerberised cluster, you will need to firstly `kinit` as a valid kerberos user first for the following to work. You can use `klist` to verify that you have an active kerberos ticket.
 
+![kinit](img/example_kinit.png?raw=true)
+
+To start your spark shell, run the following. Note that depending on your executor setup and the amount of cpu and ram you have available you will need to set different settings for `driver-core`, `driver-memory`, `executor-cores` and `executor-memory`.
 
 ```{bash}
 
@@ -141,7 +162,9 @@ spark3-shell \
 
 ```
 
-Breaking down the Spark Submit command:
+## Breaking down the Spark Submit command
+
+Here are some brief tips to help you understand the spark submit command. Note this is not definitive and do consult the rapids.ai and spark 3 documentation for further details.
 
 - The GPU on G4 instance I had has 16GB VRAM so I upped executor memory to match so that there is some data buffering capability in the executor. Since GPUs are typically RAM constrained it is important to try and minimise the amount of time that you are bottlenecking waiting for data. There is no science around how much to up the executor memory. It just depends on your application and how much IO you have going to and from the GPU. Also non GPU friendly ops will be completed by the executor on CPU so ensure that the executors are beefy enough to handle those. Same with executor cores, I upped it to a recommended level for pulling and pushing data from HDFS.
 - `spark.rapids.sql.explain=ALL` helps to highlight which parts of a spark operation can and can't be done on GPU. Example of operations which aren't current currently be done on GPU include: Regex splitting of strings, Datetime logic, some statistical operations. Overall the less non supported operations that you have better the performance.
