@@ -1,6 +1,6 @@
 # RAPIDS.ai on Cloudera CDP
 
-RAPIDS.ai is a set of Nvidia libraries designed to help Data Scientists and Engineers to leverage the Nvidia GPUs to accelerate all the steps in the Data Science process. For data exploration through to model development. Recently, with the inclusion of GPU processing support in Spark 3, RAPIDS has released a set of plugins designed to accelerate Spark DataFrame operations with the aid of GPU accelerators.  
+RAPIDS.ai is a set of Nvidia libraries designed to help Data Scientists and Engineers to leverage the Nvidia GPUs to accelerate all the steps in the Data Science process. From data exploration through to model development. Recently, with the inclusion of GPU processing support in Spark 3, RAPIDS has released a set of plugins designed to accelerate Spark DataFrame operations with the aid of GPU accelerators.  
 
 This repo gives an introduction to setting up RAPID.ai on Cloudera's CDP Platform
 Before starting make sure that you have access to the following requirements first
@@ -69,11 +69,7 @@ Ticking the big tickbox will enable it for all nodes but it can also be set on a
 
 ![cgroups hostgroups](img/host_groups_override.png?raw=true)
 
-With cgroups enabled, we now need to turn on **Cgroup Scheduling** under the Yarn service. Go to the Yarn service Cloudera Manager. Go to `Resource Management` then search for cgroup. Tick the setting `Use CGroups for Resource Management`  
-
-![yarn cgroups](img/yarn_use_cgroups.png?raw=true)
-
-We will also need to turn on `Always Use Linux Container Executor` 
+With cgroups enabled, we now need to turn on **Cgroup Scheduling** under the Yarn service. Go to the Yarn service Cloudera Manager. Go to `Resource Management` then search for cgroup. Tick the setting `Use CGroups for Resource Management`. We will also need to turn on `Always Use Linux Container Executor` 
 
 ![yarn cgroups](img/linux_container_executor.png?raw=true)
 
